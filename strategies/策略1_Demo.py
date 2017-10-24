@@ -63,7 +63,7 @@ class Strategy(StrategyTemplate):
         self.log.info('\n\n策略1触发')
         self.log.info('行情数据: 万科价格: %s' % event.data['000002'])
         self.log.info('检查持仓')
-        self.log.info(self.user.balance)
+        #self.log.info(self.user.balance)
         self.log.info('\n')
 
     def clock(self, event):
