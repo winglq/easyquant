@@ -8,9 +8,6 @@ certifi==2017.7.27.1
 chardet==3.0.4
 cssselect==1.0.1
 demjson==2.2.4
-easyquotation==0.5.2
-easytrader==0.12.3
-easyutils==0.1.5
 idna==2.6
 Logbook==1.1.0
 lxml==4.1.0
@@ -24,7 +21,12 @@ redis==2.10.6
 requests==2.18.4
 rqopen-client==0.0.4
 six==1.11.0
-tushare==0.9.9
 urllib3==1.22
 xlrd==1.1.0
 yarl==0.13.0
+tushare==0.9.9
+easyquotation==0.5.2
+easytrader==0.12.3
+easyutils==0.1.5
+eventlet==0.21.0
+oslo.config==5.0.0

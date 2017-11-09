@@ -1,40 +1,67 @@
-import time
-import datetime as dt
-from dateutil import tz
+import tushare as ts
+import requests
+import json
+
 from easyquant import DefaultLogHandler
 from easyquant import StrategyTemplate
-import tushare as ts
+from utils.utils import get_all_highest_druing_previous_days
+from eventlet.greenpool import GreenPool
+from easyquant.exceptions import NoHistoryData
+from datetime import datetime as dt
+from oslo_config import cfg
 
+turtle_sys1_opts = [
+    cfg.StrOpt('sys1_post_url',
+               help='Post result to this url'),
+]
+
+CONF = cfg.CONF
+CONF.register_opts(turtle_sys1_opts)
 
 class Strategy(StrategyTemplate):
-    name = 'system1'
-    max_20 = {}
+    name = 'turtle system1'
+
+    def __init__(self, user, log_handler, main_engine):
+        super(Strategy, self).__init__(user, log_handler, main_engine)
+        self.max_in_previous = {}
+        self.initing = False
+        self.inited = False
+        self.breaked_stocks = {}
+        self.days = 20
+        self.post_url = CONF.sys1_post_url
 
     def strategy(self, event):
-        if not self.max_20:
-            for stock, data in event.data.items():
-                start = (dt.datetime.now() - dt.timedelta(days=20)). \
-                    strftime('%Y-%m-%d')
-                end = (dt.datetime.now()- dt.timedelta(days=1)). \
-                    strftime('%Y-%m-%d')
-                hs = ts.get_hist_data(stock, start=start, end=end)
-                try:
-                    self.max_20[stock] = max(hs['close'])
-                    print(stock + " completed max %0.2f" % self.max_20[stock])
-                except ValueError:
-                    pass
+        if self.initing and not self.inited:
+            return
+        if not self.initing:
+            self.initing = True
+        if not self.max_in_previous:
+            get_all_highest_druing_previous_days(self.days, self.max_in_previous)
+            self.inited = True
+            self.initing = False
+            print("init completed")
+
+        new_breaked_stocks = False
         for stock, data in event.data.items():
-            if float(data['now']) > float(self.max_20.get(stock, 100000)):
-                print("%s %s now: %s max in previous 20 days: %s" %
-                      (stock, data['name'], data['now'],
-                       self.max_20.get(stock, 100000)))
-        print "=" * 20                
+            if stock not in self.breaked_stocks and \
+                    float(data['now']) > float(self.max_in_previous.get(stock, 100000)):
+                break_info = {'name': data['name'],
+                              'code': stock,
+                              'previous_highest_price': self.max_in_previous[stock],
+                              'break_time':
+                              dt.now().strftime(
+                                  dt.now().strftime('%Y-%m-%d %H:%M')),
+                              'break_price': data['now']}
+                
+                self.breaked_stocks[stock] = break_info
+                new_breaked_stocks = True
+
+        if new_breaked_stocks:
+            requests.post(self.post_url,
+                          json=[x for x in self.breaked_stocks.values()])
+        print("\n")
 
     def clock(self, event):
-        """在交易时间会定时推送 clock 事件
-        :param event: event.data.clock_event 为 [0.5, 1, 3, 5, 15, 30, 60] 单位为分钟,  ['open', 'close'] 为开市、收市
-            event.data.trading_state  bool 是否处于交易时间
-        """
         if event.data.clock_event == 'open':
             # 开市了
             self.log.info('open')
