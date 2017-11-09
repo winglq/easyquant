@@ -43,22 +43,29 @@ class Strategy(StrategyTemplate):
 
         new_breaked_stocks = False
         for stock, data in event.data.items():
+            sinfo = self.max_in_previous.get(stock, None)
+            if stock[0:2] not in ['00', '30', '60']:
+                continue
+            if sinfo is None:
+                continue
             if stock not in self.breaked_stocks and \
-                    float(data['now']) > float(self.max_in_previous.get(stock, 100000)):
+                    float(data['now']) > float(sinfo['max']):
                 break_info = {'name': data['name'],
                               'code': stock,
-                              'previous_highest_price': self.max_in_previous[stock],
+                              'previous_highest_price': "%0.2f" % sinfo['max'],
                               'break_time':
                               dt.now().strftime(
                                   dt.now().strftime('%Y-%m-%d %H:%M')),
-                              'break_price': data['now']}
-                
+                              'break_price': data['now'],
+                              'std': "%0.2f" % sinfo['std']}
                 self.breaked_stocks[stock] = break_info
                 new_breaked_stocks = True
 
         if new_breaked_stocks:
             requests.post(self.post_url,
-                          json=[x for x in self.breaked_stocks.values()])
+                          json=sorted(
+                              [x for x in self.breaked_stocks.values()],
+                              key=lambda x : x['std']))
         print("\n")
 
     def clock(self, event):

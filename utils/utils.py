@@ -28,9 +28,19 @@ def get_edge_during_days(stock, start, end, coloumn, highest=True):
             raise NoHistoryData("Could not get history data for stock %s" %
                                 stock)
     if highest:
-        return max(hist_cache[key][coloumn])
+        idxmax = hist_cache[key][coloumn].idxmax()
+        max_val = hist_cache[key][coloumn][idxmax]
+        std = hist_cache[key][coloumn].std()
+        return {'max': max_val,
+                'idxmax': idxmax,
+                'std': std}
     else:
-        return min(hist_cache[key][coloumn])
+        idxmin = hist_cache[key][coloumn].idxmin()
+        min_val = hist_cache[key][coloumn][idxmin]
+        std = hist_cache[key][coloumn].std()
+        return {'min': min_val,
+                'idxmin': idxmin,
+                'std': std}
 
 
 def get_edge_during_previous_days(stock, days, coloumn, highest=True):
@@ -42,7 +52,7 @@ def get_edge_during_previous_days(stock, days, coloumn, highest=True):
 def eventlet_handle(fun, stock_code, ret_dict):
     try:
         val = fun(stock_code)
-        print(stock_code + " completed max %0.2f" % val)
+        print(stock_code + " completed max %0.2f" % val['max'])
         ret_dict[stock_code] = val
     except ValueError:
         print(stock_code + " get history failed")
@@ -71,4 +81,4 @@ def get_all_highest_druing_previous_days(days, result):
 
 if __name__ == "__main__":
     result = {}
-    print(get_all_highest_druing_previous_days(20, result))
+    print(get_edge_during_previous_days('000008', 20, 'high', highest=True))
