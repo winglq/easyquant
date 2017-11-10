@@ -57,7 +57,7 @@ class Strategy(StrategyTemplate):
                               dt.now().strftime(
                                   dt.now().strftime('%Y-%m-%d %H:%M')),
                               'break_price': data['now'],
-                              'std': "%0.2f" % sinfo['std']}
+                              'cv': "%0.2f" % sinfo['cv']}
                 self.breaked_stocks[stock] = break_info
                 new_breaked_stocks = True
 

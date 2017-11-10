@@ -31,6 +31,7 @@ def get_edge_during_days(stock, start, end, coloumn, highest=True):
         idxmax = hist_cache[key][coloumn].idxmax()
         max_val = hist_cache[key][coloumn][idxmax]
         std = hist_cache[key][coloumn].std()
+        mean = hist_cache[key][coloumn].mean()
         return {'max': max_val,
                 'idxmax': idxmax,
                 'std': std}
@@ -40,7 +41,7 @@ def get_edge_during_days(stock, start, end, coloumn, highest=True):
         std = hist_cache[key][coloumn].std()
         return {'min': min_val,
                 'idxmin': idxmin,
-                'std': std}
+                'cv': std/mean}
 
 
 def get_edge_during_previous_days(stock, days, coloumn, highest=True):
