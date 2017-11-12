@@ -15,5 +15,5 @@ class Strategy(Sys1Strategy):
 
     def __init__(self, user, log_handler, main_engine):
         super(Strategy, self).__init__(user, log_handler, main_engine)
-        self.days = 60
+        self.days = 84
         self.post_url = CONF.sys2_post_url

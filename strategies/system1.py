@@ -27,7 +27,7 @@ class Strategy(StrategyTemplate):
         self.initing = False
         self.inited = False
         self.breaked_stocks = {}
-        self.days = 20
+        self.days = 28
         self.post_url = CONF.sys1_post_url
 
     def strategy(self, event):
@@ -65,7 +65,7 @@ class Strategy(StrategyTemplate):
             requests.post(self.post_url,
                           json=sorted(
                               [x for x in self.breaked_stocks.values()],
-                              key=lambda x : x['std']))
+                              key=lambda x : x['cv']))
         print("\n")
 
     def clock(self, event):
