@@ -42,7 +42,7 @@ class EventEngine:
         """事件处理"""
         # 检查该事件是否有对应的处理函数
         if event.event_type in self.__handlers:
-            # 若存在,则按顺序将时间传递给处理函数执行
+            # 若存在,则按顺序将事件传递给处理函数执行
             for handler in self.__handlers[event.event_type]:
                 handler(event)
 

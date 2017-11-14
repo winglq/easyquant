@@ -29,18 +29,20 @@ class StrategyTemplate:
         pass
 
     def reload(self):
+        if self._initing:
+            return
         self.init()
-        self._initing = False
+        self._initing = True
         self._inited = False
+        self.run_before_strategy()
+        self._initing = False
+        self._inited = True
 
     def strategy_wrapper(self, event):
         if self._initing and not self._inited:
             return
         if not self._initing and not self._inited:
-            self._initing = True
-            self.run_before_strategy()
-            self._initing = False
-            self._inited = True
+            self.reload()
 
         self.strategy(event)
 

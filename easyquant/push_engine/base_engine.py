@@ -5,7 +5,7 @@ from threading import Thread
 from easyquant.event_engine import Event
 
 
-class BaseEngine:
+class BaseEngine(object):
     """行情推送引擎基类"""
     EventType = 'base'
     PushInterval = 1

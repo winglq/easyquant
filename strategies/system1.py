@@ -53,6 +53,7 @@ class Strategy(StrategyTemplate):
                               'break_price': data['now'],
                               'cv': "%0.2f" % sinfo['cv']}
                 self.breaked_stocks[stock] = break_info
+                self.log.info("New break: %s" % break_info)
                 new_breaked_stocks = True
 
         if new_breaked_stocks:
@@ -60,7 +61,6 @@ class Strategy(StrategyTemplate):
                           json=sorted(
                               [x for x in self.breaked_stocks.values()],
                               key=lambda x : x['cv']))
-        print("\n")
 
     def clock(self, event):
         if event.data.clock_event == 'open':
@@ -73,4 +73,5 @@ class Strategy(StrategyTemplate):
             # 5 分钟的 clock
             self.log.info("5分钟")
         elif event.data.clock_event == 'newday':
+            self.log.info("%s newday" % self.name)
             self.reload()
