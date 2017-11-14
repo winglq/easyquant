@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from easyquant.exceptions import NoHistoryData
 from eventlet.greenpool import GreenPool
 from easyquotation.helpers import get_stock_codes, stock_code_path
+from easyquant.easydealutils import time as etime
 
 hist_cache = {}
 
@@ -46,7 +47,7 @@ def get_edge_during_days(stock, start, end, coloumn, highest=True):
 
 
 def get_edge_during_previous_days(stock, days, coloumn, highest=True):
-    start = datetime.now() - timedelta(days=days)
+    start = etime.previous_trade_date_from_now(days)
     end = datetime.now() - timedelta(days=1)
     return get_edge_during_days(stock, start, end, coloumn, highest)
 

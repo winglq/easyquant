@@ -1,3 +1,4 @@
+import json
 import datetime
 import doctest
 from functools import lru_cache
@@ -7,12 +8,9 @@ import requests
 
 @lru_cache()
 def _is_holiday(day):
-    # 该接口可能将于 2016.7.1 过期, 请关注该主页
-    api = 'http://www.easybots.cn/api/holiday.php'
-    params = {'d': day}
-    rep = requests.get(api, params)
-    res = rep.json()[day if isinstance(day, str) else day[0]]
-    return True if res == "1" else False
+    with open("holidays.json") as f:
+        holidays = json.load(f)
+        return int(day) in holidays
 
 
 def is_holiday(now_time):
@@ -111,6 +109,18 @@ def is_closing(now_time, start=datetime.time(14, 54, 30)):
             return True
     return False
 
+
+def previous_trade_date_from_now(trade_days):
+    date = datetime.datetime.now().date()
+    for x in range(1, trade_days + 1):
+        date = date - datetime.timedelta(days=1)
+        while not is_trade_date(date):
+            date = date - datetime.timedelta(days=1)
+    return date
+
+
 if __name__ == "__main__":
     # doctest.testmod()
-    print(is_trade_date(datetime.datetime.now()))
+    print(is_trade_date(datetime.date(2017, 10, 3)))
+    print(is_holiday(datetime.date(2017, 10, 3)))
+    print(previous_trade_date_from_now(20))

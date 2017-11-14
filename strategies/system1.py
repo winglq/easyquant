@@ -23,7 +23,7 @@ class Strategy(StrategyTemplate):
 
     def __init__(self, user, log_handler, main_engine):
         super(Strategy, self).__init__(user, log_handler, main_engine)
-        self.days = 28
+        self.days = 20
         self.post_url = CONF.sys1_post_url
 
     def init(self):
