@@ -13,6 +13,8 @@ from oslo_config import cfg
 turtle_sys1_opts = [
     cfg.StrOpt('sys1_post_url',
                help='Post result to this url'),
+    cfg.StrOpt('sys1_alert_url',
+               help='Post alert to this url'),
 ]
 
 CONF = cfg.CONF
@@ -25,6 +27,7 @@ class Strategy(StrategyTemplate):
         super(Strategy, self).__init__(user, log_handler, main_engine)
         self.days = 20
         self.post_url = CONF.sys1_post_url
+        self.alert_url = CONF.sys1_alert_url
 
     def init(self):
         self.max_in_previous = {}
@@ -36,6 +39,7 @@ class Strategy(StrategyTemplate):
 
     def strategy(self, event):
         new_breaked_stocks = False
+        recommand_stocks = []
         for stock, data in event.data.items():
             sinfo = self.max_in_previous.get(stock, None)
             if stock[0:2] not in ['00', '30', '60']:
@@ -54,6 +58,8 @@ class Strategy(StrategyTemplate):
                               'cv': "%0.2f" % sinfo['cv']}
                 self.breaked_stocks[stock] = break_info
                 self.log.info("New break: %s" % break_info)
+                if float(sinfo['cv']) < 2.0:
+                    recommand_stocks.append(break_info)
                 new_breaked_stocks = True
 
         if new_breaked_stocks:
@@ -61,6 +67,11 @@ class Strategy(StrategyTemplate):
                           json=sorted(
                               [x for x in self.breaked_stocks.values()],
                               key=lambda x : x['cv']))
+        if len(recommand_stocks) > 0:
+            send_data = {'type': 'buy', 'stocks': self.recommand_stocks,
+                         'info': 'Buy alert from %s' % self.name}
+            requests.post(self.alert_url,
+                          json=send_data)
 
     def clock(self, event):
         if event.data.clock_event == 'open':

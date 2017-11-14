@@ -4,6 +4,9 @@ from oslo_config import cfg
 turtle_sys2_opts = [
     cfg.StrOpt('sys2_post_url',
                help='Post result to this url'),
+    cfg.StrOpt('sys2_alert_url',
+               help='Post alert to this url'),
+
 ]
 
 CONF = cfg.CONF
@@ -17,3 +20,4 @@ class Strategy(Sys1Strategy):
         super(Strategy, self).__init__(user, log_handler, main_engine)
         self.days = 60
         self.post_url = CONF.sys2_post_url
+        self.alert_url = CONF.sys2_alert_url
