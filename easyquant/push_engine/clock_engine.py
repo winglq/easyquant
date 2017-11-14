@@ -144,6 +144,9 @@ class ClockEngine:
 
         self._register_moment('close', datetime.time(15, tzinfo=self.tzinfo), makeup=True, call=close)
 
+        self.register_moment('newday', datetime.time(1, tzinfo=self.tzinfo),
+                             makeup=True)
+
         # 间隔事件
         for interval in (0.5, 1, 5, 15, 30, 60):
             self.register_interval(interval)

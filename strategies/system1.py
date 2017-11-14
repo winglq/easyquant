@@ -23,24 +23,18 @@ class Strategy(StrategyTemplate):
 
     def __init__(self, user, log_handler, main_engine):
         super(Strategy, self).__init__(user, log_handler, main_engine)
-        self.max_in_previous = {}
-        self.initing = False
-        self.inited = False
-        self.breaked_stocks = {}
         self.days = 28
         self.post_url = CONF.sys1_post_url
 
-    def strategy(self, event):
-        if self.initing and not self.inited:
-            return
-        if not self.initing:
-            self.initing = True
-        if not self.max_in_previous:
-            get_all_highest_druing_previous_days(self.days, self.max_in_previous)
-            self.inited = True
-            self.initing = False
-            print("init completed")
+    def init(self):
+        self.max_in_previous = {}
+        self.breaked_stocks = {}
 
+    def run_before_strategy(self):
+        get_all_highest_druing_previous_days(self.days, self.max_in_previous)
+        print("init completed")
+
+    def strategy(self, event):
         new_breaked_stocks = False
         for stock, data in event.data.items():
             sinfo = self.max_in_previous.get(stock, None)
@@ -78,3 +72,5 @@ class Strategy(StrategyTemplate):
         elif event.data.clock_event == 5:
             # 5 分钟的 clock
             self.log.info("5分钟")
+        elif event.data.clock_event == 'newday':
+            self.reload()

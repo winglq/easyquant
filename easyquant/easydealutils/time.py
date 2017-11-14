@@ -112,4 +112,5 @@ def is_closing(now_time, start=datetime.time(14, 54, 30)):
     return False
 
 if __name__ == "__main__":
-    doctest.testmod()
+    # doctest.testmod()
+    print(is_trade_date(datetime.datetime.now()))
