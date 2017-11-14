@@ -28,6 +28,7 @@ class Strategy(StrategyTemplate):
         self.days = 20
         self.post_url = CONF.sys1_post_url
         self.alert_url = CONF.sys1_alert_url
+        self.alert_cv = 2.0
 
     def init(self):
         self.max_in_previous = {}
@@ -58,7 +59,7 @@ class Strategy(StrategyTemplate):
                               'cv': "%0.2f" % sinfo['cv']}
                 self.breaked_stocks[stock] = break_info
                 self.log.info("New break: %s" % break_info)
-                if float(sinfo['cv']) < 2.0:
+                if float(sinfo['cv']) < self.alert_cv:
                     recommand_stocks.append(break_info)
                 new_breaked_stocks = True
 
@@ -68,7 +69,7 @@ class Strategy(StrategyTemplate):
                               [x for x in self.breaked_stocks.values()],
                               key=lambda x : x['cv']))
         if len(recommand_stocks) > 0:
-            send_data = {'type': 'buy', 'stocks': self.recommand_stocks,
+            send_data = {'type': 'buy', 'stocks': recommand_stocks,
                          'info': 'Buy alert from %s' % self.name}
             requests.post(self.alert_url,
                           json=send_data)
