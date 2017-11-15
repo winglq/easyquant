@@ -5,6 +5,7 @@ import easyquotation
 from .base_engine import BaseEngine
 from easyquant.easydealutils import time as etime
 from datetime import datetime
+from easyquant.event_engine import Event
 
 
 class DefaultQuotationEngine(BaseEngine):
