@@ -29,6 +29,7 @@ class Strategy(StrategyTemplate):
         self.post_url = CONF.sys1_post_url
         self.alert_url = CONF.sys1_alert_url
         self.alert_cv = 2.0
+        self.priority = 1
 
     def init(self):
         self.max_in_previous = {}
@@ -69,8 +70,11 @@ class Strategy(StrategyTemplate):
                               [x for x in self.breaked_stocks.values()],
                               key=lambda x : x['cv']))
         if len(recommand_stocks) > 0:
-            send_data = {'type': 'buy', 'stocks': recommand_stocks,
-                         'info': 'Buy alert from %s' % self.name}
+            send_data = {'type': 'stock',
+                         'priority': self.priority,
+                         'data': {'stocks': recommand_stocks,
+                                  'action': 'buy',
+                                  'system': self.name}}
             requests.post(self.alert_url,
                           json=send_data)
 

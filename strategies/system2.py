@@ -21,3 +21,4 @@ class Strategy(Sys1Strategy):
         self.days = 60
         self.post_url = CONF.sys2_post_url
         self.alert_url = CONF.sys2_alert_url
+        self.priority = 2
