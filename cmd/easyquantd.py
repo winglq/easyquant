@@ -7,8 +7,7 @@ def main():
     cfg.CONF(args=[],
              project='easyquantd')
 
-    #m = MainEngine(broker=None, quotation_engines=TradeTimeQuotationEngine)
-    m = MainEngine(broker=None)
+    m = MainEngine(broker=None, quotation_engines=TradeTimeQuotationEngine)
     m.load_strategy()
     m.start()
 
