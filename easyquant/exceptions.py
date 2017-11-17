@@ -4,3 +4,7 @@ class EasyQuantException(Exception):
 
 class NoHistoryData(EasyQuantException):
     pass
+
+
+class LessDaysThanExpected(EasyQuantException):
+    pass
