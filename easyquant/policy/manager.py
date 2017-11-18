@@ -67,14 +67,17 @@ class Manager(object):
     def register_rules(self, name, rule):
         self.rules[name] = rule
 
-    def policy_create(self, name, rules):
+    def policy_create(self, name, rules, **kwargs):
         if not isinstance(rules, list):
             rules = [rules]
-        policy = Policy(name)
+        policy = Policy(name, **kwargs)
         # rule names to rule objects
         rules = [self.rules[rule] for rule in rules]
         policy.add_rules(rules)
         self.polices.append(policy)
+
+    def get_policy(self, name):
+        return next(filter(lambda x: x.name == name, self.polices))
 
     def get_val_func_create(self, wrapper_name, name, *args):
         self.get_val_funcs[name] = \

@@ -4,10 +4,12 @@ from datetime import datetime
 
 
 class Policy(object):
-    def __init__(self, name):
+    def __init__(self, name, alert=False, priority=1):
         self.rules = []
         self.name = name
         self.result = None
+        self.alert = alert
+        self.priority = priority
 
     def add_rules(self, rules):
         if not isinstance(rules, list):
@@ -20,24 +22,24 @@ class Policy(object):
         for rule in self.rules:
             result = rule.filter(result)
 
-        updated = False
+        updated = []
         if self.result is None and result:
-            updated = True
+            updated = result.keys()
             self.result = result
             for code, data in self.result.items():
-                self.insert_break_time(data)
+                self.insert_update_time(data)
         else:
             # insert break time to new stock only
             old_keys = set(self.result.keys())
             new_keys = set(result.keys())
             diff_keys = new_keys - old_keys
-            updated = True if len(diff_keys) else False
+            updated = diff_keys
             for key in diff_keys:
-                self.insert_break_time(result[key])
+                self.insert_update_time(result[key])
                 self.result[key] = result[key]
 
         return {'result': self.result, 'updated': updated}
 
-    def insert_break_time(self, stock_data):
+    def insert_update_time(self, stock_data):
         break_time = datetime.now().strftime("%Y-%m-%d %H:%M")
-        stock_data['break_time'] = break_time
+        stock_data['update_time'] = break_time

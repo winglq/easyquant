@@ -6,14 +6,25 @@ from easyquotation.helpers import get_stock_codes
 from easyquant import StrategyTemplate
 from easyquant.policy.manager import Manager
 from easyquant.easydealutils.time import previous_trade_date_from_now
+from oslo_config import cfg
 
+opts = [
+    cfg.StrOpt("alert_post_url",
+               help="alert post url"),
+    cfg.StrOpt("policy_post_url",
+               help="Policy post url")]
+
+CONF = cfg.CONF
+CONF.register_opts(opts)
 
 class Strategy(StrategyTemplate):
 
     def __init__(self, user, log_handler, main_engine):
         super(Strategy, self).__init__(user, log_handler, main_engine)
         self.define_policies()
-        self.policy_post_url = None
+        self.policy_post_url = CONF.policy_post_url
+        self.alert_post_url = CONF.alert_post_url
+        self.priority = 1
 
     @staticmethod
     def get_hist_data(code):
@@ -40,11 +51,31 @@ class Strategy(StrategyTemplate):
     def strategy(self, event):
         result = self.manager.run(event.data)
         print(result['system4'])
+        updated = False
         for policy, data in result.items():
             if data['updated'] and self.policy_post_url:
-                requests.post(self.policy_post_url,
-                              json = data['result'])
+                updated = True
+            if self.manager.get_policy(policy).alert and \
+                    data['updated']:
+                alert_contents = []
+                for key in data['updated']:
+                    data['result'][key]['code'] = key
+                    alert_contents.append(data['result'][key])
+                send_data = {'type': 'stock',
+                             'priority':
+                             self.manager.get_policy(policy).priority,
+                             'data': {'stocks': alert_contents,
+                                      'action': 'buy',
+                                      'system': policy}}
+                print(send_data)
 
+                requests.post(self.alert_post_url,
+                              json = send_data)
+            data.pop('updated')
+
+        if updated:
+            requests.post(self.policy_post_url,
+                          json = result)
 
     def define_policies(self):
         self.manager = Manager()
@@ -91,7 +122,8 @@ class Strategy(StrategyTemplate):
         self.manager.policy_create('system3', ['highest_60_rule',
                                                'cv_60_strict_rule',
                                                'redday_60_rule'])
-        self.manager.policy_create('system4', ['redday_60_rule_strict'])
+        self.manager.policy_create('system4', ['redday_60_rule_strict'],
+                                   alert=True, priority=2)
 
 
     def clock(self, event):

@@ -11,7 +11,10 @@ class Rule(object):
             try:
                 if self.operator(self.get_val_func(data),
                                  self.indicator.get_compare_val(code)):
-                    data.update(self.indicator.get_all_val(code))
+                    if not data.get('rule_results', None):
+                        data['rule_results'] = self.indicator.get_all_val(code)
+                    else:
+                        data['rule_results'].update(self.indicator.get_all_val(code))
                     result[code] = data
             except KeyError:
                 pass
