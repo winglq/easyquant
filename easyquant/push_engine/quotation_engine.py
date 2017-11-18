@@ -4,8 +4,8 @@ import easyquotation
 
 from .base_engine import BaseEngine
 from easyquant.easydealutils import time as etime
-from datetime import datetime
-from easyquant.event_engine import Event
+from easyquant.utils.utils import get_all_stock_codes
+import tushare as ts
 
 
 class DefaultQuotationEngine(BaseEngine):
@@ -24,7 +24,8 @@ class TradeTimeQuotationEngine(BaseEngine):
         self.source = easyquotation.use('sina')
 
     def fetch_quotation(self):
-        return self.source.all
+        all_codes = get_all_stock_codes()
+        self.source.stocks(all_codes)
 
     def push_quotation(self):
         while self.is_active:

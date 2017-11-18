@@ -7,7 +7,7 @@ class Policy(object):
     def __init__(self, name, alert=False, priority=1):
         self.rules = []
         self.name = name
-        self.result = None
+        self.result = {}
         self.alert = alert
         self.priority = priority
 
@@ -23,7 +23,7 @@ class Policy(object):
             result = rule.filter(result)
 
         updated = []
-        if self.result is None and result:
+        if not self.result and result:
             updated = result.keys()
             self.result = result
             for code, data in self.result.items():

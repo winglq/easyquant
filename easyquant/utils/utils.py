@@ -11,6 +11,16 @@ from easyquant.easydealutils import time as etime
 
 hist_cache = {}
 
+all_codes_cache = None
+
+def get_all_stock_codes(update=False):
+    global all_codes_cache
+    if all_codes_cache is None or update:
+        bs = ts.get_stock_basics()
+        all_codes_cache = bs.index.tolist()
+        all_codes_cache.sort()
+    return all_codes_cache
+
 
 def get_edge_during_days(stock, start, end, coloumn, highest=True):
     """get the edge value from start to end.
