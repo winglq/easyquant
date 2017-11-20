@@ -3,6 +3,7 @@ import os
 
 from datetime import datetime
 from easyquant import exceptions
+from easyquant.easydealutils import time as etime
 
 
 class Indicator(object):
@@ -13,11 +14,11 @@ class Indicator(object):
     def calculate(self, code, dataframe):
         self.validate(code, dataframe)
         self.cal(code, dataframe)
-        print("Indicator: %s Code: % init completed" %
+        print("Indicator: %s Code: %s init completed" %
               (self.name, code))
 
     def validate(self, code, dataframe):
-        raise NotImplementedError()
+        pass
 
     def cal(self, code, dataframe):
         raise NotImplementedError()
@@ -78,7 +79,7 @@ class CVIndicator(IndicatorInDays):
     def cal(self, code, dataframe):
         std = dataframe[self.column].std()
         mean = dataframe[self.column].mean()
-        cv = std / mean
+        cv = std / mean * 100
         self.results[code] = {'cv': round(float(cv), 2)}
 
     def get_compare_val(self, code):
@@ -147,12 +148,43 @@ class StopLossIndicator(Indicator):
         return self.results[code]['stop_loss_price']
 
 
+class YesterdayUpDownStockCount(IndicatorInDays):
+    def __init__(self, name):
+        super(YesterdayUpDownStockCount, self).__init__(name, 1)
+        self.previous_trade_day = etime.previous_trade_date_from_now(1)
+        self.results['total'] = {}
+        self.results['total']['yesterday_nochange'] = 0
+        self.results['total']['yesterday_up'] = 0
+        self.results['total']['yesterday_down'] = 0
+
+    def yesterday_change(self, series):
+        return series['close'] - series['open']
+
+    def cal(self, code, dataframe):
+        yesterday = self.previous_trade_day.strftime("%Y-%m-%d")
+        if yesterday != dataframe.index[0]:
+            self.results['total']['yesterday_nochange'] += 1
+            return
+
+        yesterday_series = dataframe.loc[dataframe.index[0]]
+        change = self.yesterday_change(yesterday_series)
+        if change > 0:
+            self.results['total']['yesterday_up'] += 1
+        if change < 0:
+            self.results['total']['yesterday_down'] += 1
+        if change == 0:
+            self.results['total']['yesterday_nochange'] += 1
+
+
 if __name__ == "__main__":
     import tushare as ts
     hist = ts.get_hist_data("002597", start="2017-09-10", end="2017-11-17")
     hindicator = EdgeIndicator('edge', 'close', 30)
+    yindicator = YesterdayUpDownStockCount('yesterday')
     hindicator.calculate("002597", hist)
     print(hindicator.get_all_val("002597"))
     cindicator = ContinuousRedDaysIndicator('reddays', 3, 30)
     cindicator.calculate('002597', hist)
     print(cindicator.get_all_val("002597"))
+    yindicator.calculate('002597', hist)
+    print(yindicator.get_all_val('total'))

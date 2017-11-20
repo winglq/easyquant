@@ -21,6 +21,10 @@ class Strategy(StrategyTemplate):
 
     def __init__(self, user, log_handler, main_engine):
         super(Strategy, self).__init__(user, log_handler, main_engine)
+        self.manager = Manager()
+        self.define_indicators()
+        self.define_get_val_funcs()
+        self.define_rules()
         self.define_policies()
         self.policy_post_url = CONF.policy_post_url
         self.alert_post_url = CONF.alert_post_url
@@ -50,7 +54,6 @@ class Strategy(StrategyTemplate):
 
     def strategy(self, event):
         result = self.manager.run(event.data)
-        print(result['system4'])
         updated = False
         for policy, data in result.items():
             if data['updated'] and self.policy_post_url:
@@ -77,8 +80,7 @@ class Strategy(StrategyTemplate):
             requests.post(self.policy_post_url,
                           json = result)
 
-    def define_policies(self):
-        self.manager = Manager()
+    def define_indicators(self):
         self.manager.indicator_create('edge_cls', name='highest_20',
                                       column='high', days=20)
         self.manager.indicator_create('edge_cls', name='highest_60',
@@ -90,16 +92,28 @@ class Strategy(StrategyTemplate):
 
         self.manager.indicator_create("continuouse_red_days_cls",
                                       name='redday_60',
-                                      expected_continuous_days=3,
+                                      expected_continuous_days=5,
                                       days=60)
+        self.manager.indicator_create("stop_loss_price_cls",
+                                      name='stoploss',
+                                      code_stoplossprice_dict={'002597':
+                                                               25.30})
+        self.manager.indicator_create("yesterday_updown_stock_count_cls",
+                                      name='updown')
+
+    def define_get_val_funcs(self):
         self.manager.get_val_func_create('get_fixed_value_func', 'fix_500',
                                          500)
         self.manager.get_val_func_create('get_fixed_value_func', 'fix_2',
                                          2)
+        self.manager.get_val_func_create('get_fixed_value_func', 'fix_1',
+                                         1)
         self.manager.get_val_func_create('get_fixed_value_func', 'fix_8',
                                          8)
         self.manager.get_val_func_create('get_value_by_key_func', 'key_now',
                                          'now')
+
+    def define_rules(self):
         self.manager.rule_create('highest_20_rule', "key_now", '>',
                                  'highest_20')
         self.manager.rule_create('highest_60_rule', "key_now", '>',
@@ -110,21 +124,31 @@ class Strategy(StrategyTemplate):
                                  'cv_60')
         self.manager.rule_create('cv_60_strict_rule', "fix_2", '>',
                                  'cv_60')
-        self.manager.rule_create('redday_60_rule', "fix_2", '<',
+        self.manager.rule_create('redday_60_rule', "fix_1", '<',
                                  'redday_60')
-        self.manager.rule_create('redday_60_rule_strict', "fix_8", '<',
-                                 'redday_60')
+        self.manager.rule_create('stop_loss_price_rule', "key_now", '<',
+                                 'stoploss')
 
-        self.manager.policy_create('system1', ['highest_20_rule',
-                                               'cv_20_rule'])
-        self.manager.policy_create('system2', ['highest_60_rule',
-                                               'cv_60_rule'])
-        self.manager.policy_create('system3', ['highest_60_rule',
-                                               'cv_60_strict_rule',
-                                               'redday_60_rule'])
-        self.manager.policy_create('system4', ['redday_60_rule_strict'],
-                                   alert=True, priority=2)
 
+    def define_policies(self):
+
+        self.manager.policy_create('system1-500cv', ['highest_20_rule',
+                                                     'cv_20_rule'])
+        self.manager.policy_create('system2-500cv', ['highest_60_rule',
+                                                     'cv_60_rule'])
+        #self.manager.policy_create('system1-2cv', ['highest_20_rule',
+        #                                           'cv_20_strict_rule'])
+
+        #self.manager.policy_create('system2-2cv', ['highest_60_rule',
+        #                                       'cv_60_strict_rule'])
+
+        self.manager.policy_create('fjj', ['cv_60_strict_rule',
+                                           'highest_60_rule',
+                                           'redday_60_rule'],
+                                   alert=True)
+        self.manager.policy_create('fjj-nobreak', ['cv_60_strict_rule',
+                                                   'redday_60_rule'])
+        self.manager.policy_create('stoploss', ['stop_loss_price_rule'])
 
     def clock(self, event):
         if event.data.clock_event == 'open':

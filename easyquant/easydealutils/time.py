@@ -123,4 +123,4 @@ if __name__ == "__main__":
     # doctest.testmod()
     print(is_trade_date(datetime.date(2017, 10, 3)))
     print(is_holiday(datetime.date(2017, 10, 3)))
-    print(previous_trade_date_from_now(20))
+    print(previous_trade_date_from_now(1))

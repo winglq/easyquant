@@ -5,6 +5,7 @@ from easyquant.policy.indicator import ContinuousRedDaysIndicator
 from easyquant.policy.indicator import EdgeIndicator
 from easyquant.policy.indicator import StopLossIndicator
 from easyquant.policy.indicator import CVIndicator
+from easyquant.policy.indicator import YesterdayUpDownStockCount
 from easyquant.policy.rule import Rule
 
 
@@ -51,7 +52,9 @@ class Manager(object):
         indicator_map = {"continuouse_red_days_cls": ContinuousRedDaysIndicator,
                          "edge_cls": EdgeIndicator,
                          "stop_loss_price_cls": StopLossIndicator,
-                         "cv_cls": CVIndicator}
+                         "cv_cls": CVIndicator,
+                         "yesterday_updown_stock_count_cls":
+                         YesterdayUpDownStockCount}
         for name, indicator in indicator_map.items():
             self.register_indicator_cls(name, indicator)
 
