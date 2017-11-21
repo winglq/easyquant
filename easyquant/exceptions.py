@@ -8,3 +8,7 @@ class NoHistoryData(EasyQuantException):
 
 class LessDaysThanExpected(EasyQuantException):
     pass
+
+
+class StockValueZero(EasyQuantException):
+    pass

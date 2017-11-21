@@ -145,6 +145,9 @@ class Strategy(StrategyTemplate):
                                          8)
         self.manager.get_val_func_create('get_value_by_key_func', 'key_now',
                                          'now')
+        self.manager.get_val_func_create('get_value_by_key_ignore_zero_func',
+                                         'key_now_ignore_zero',
+                                         'now')
 
     def define_rules(self):
         self.manager.rule_create('highest_20_rule', "key_now", '>',
@@ -161,8 +164,8 @@ class Strategy(StrategyTemplate):
                                  'cv_60')
         self.manager.rule_create('redday_60_rule', "fix_1", '<',
                                  'redday_60')
-        self.manager.rule_create('stop_loss_price_rule', "key_now", '<',
-                                 'stoploss')
+        self.manager.rule_create('stop_loss_price_rule', "key_now_ignore_zero",
+                                 '<', 'stoploss')
 
 
     def define_policies(self):

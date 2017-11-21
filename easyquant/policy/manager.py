@@ -34,9 +34,19 @@ class Manager(object):
         def get_value_by_key_wrapper(key):
             return lambda x: x[key]
 
+        def get_value_by_key_ignore_zero_wrapper(key):
+            def get_value_by_key_ignore_zero(hist):
+                if int(hist[key]) != 0:
+                    return hist[key]
+                else:
+                    raise exceptions.StockValueZero()
+            return get_value_by_key_ignore_zero
+
         self.get_val_func_wrappers = \
             {'get_fixed_value_func': get_fixed_value_wrapper,
-             'get_value_by_key_func': get_value_by_key_wrapper}
+             'get_value_by_key_func': get_value_by_key_wrapper,
+             'get_value_by_key_ignore_zero_func':
+             get_value_by_key_ignore_zero_wrapper}
 
     def init_internal_operators(self):
         oper_maps = {'>': gt,

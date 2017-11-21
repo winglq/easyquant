@@ -1,3 +1,4 @@
+from easyquant import exceptions
 class Rule(object):
     def __init__(self, name, get_val_func, operator, indicator):
         self.name = name
@@ -14,9 +15,12 @@ class Rule(object):
                     if not data.get('rule_results', None):
                         data['rule_results'] = self.indicator.get_all_val(code)
                     else:
-                        data['rule_results'].update(self.indicator.get_all_val(code))
+                        data['rule_results'].update(
+                            self.indicator.get_all_val(code))
                     result[code] = data
             except KeyError:
+                pass
+            except exceptions.StockValueZero:
                 pass
         return result
 
@@ -28,11 +32,12 @@ if __name__ == "__main__":
     from operator import gt, lt
     import tushare as ts
     hist = ts.get_hist_data("002597", start="2017-10-10", end="2017-11-17")
-    cindicator = ContinuousRedDaysIndicator('60reddays', 2)
-    eindicator = EdgeIndicator('highest', 'high')
+    cindicator = ContinuousRedDaysIndicator('60reddays', 2, 10)
+    eindicator = EdgeIndicator('highest', 'high', 10)
     sindicator = StopLossIndicator('stoploss', {'002597': 31})
     cindicator.calculate("002597", hist)
     eindicator.calculate("002597", hist)
+    hist["002597"] = 0.0
     sindicator.calculate("002597", hist)
     rule1 = Rule('rule1', lambda x: 4, lt, cindicator)
     rule2 = Rule('rule2', lambda x: x['now'], gt, eindicator)
