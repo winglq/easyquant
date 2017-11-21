@@ -88,11 +88,12 @@ class Strategy(StrategyTemplate):
                 for key in data['updated']:
                     data['result'][key]['code'] = key
                     alert_contents.append(data['result'][key])
+                action = "sell" if policy == "stoploss" else "buy"
                 send_data = {'type': 'stock',
                              'priority':
                              self.manager.get_policy(policy).priority,
                              'data': {'stocks': alert_contents,
-                                      'action': 'buy',
+                                      'action': action,
                                       'system': policy}}
                 self.log.info("New alert for policy %s" % policy)
 
