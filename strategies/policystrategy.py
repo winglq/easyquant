@@ -152,6 +152,8 @@ class Strategy(StrategyTemplate):
                                  'highest_60')
         self.manager.rule_create('cv_20_rule', "fix_500", '>',
                                  'cv_20')
+        self.manager.rule_create('cv_20_strict_rule', "fix_2", '>',
+                                 'cv_20')
         self.manager.rule_create('cv_60_rule', "fix_500", '>',
                                  'cv_60')
         self.manager.rule_create('cv_60_strict_rule', "fix_2", '>',
@@ -168,18 +170,15 @@ class Strategy(StrategyTemplate):
                                                      'cv_20_rule'])
         self.manager.policy_create('system2-500cv', ['highest_60_rule',
                                                      'cv_60_rule'])
-        #self.manager.policy_create('system1-2cv', ['highest_20_rule',
-        #                                           'cv_20_strict_rule'])
-
-        #self.manager.policy_create('system2-2cv', ['highest_60_rule',
-        #                                       'cv_60_strict_rule'])
-
-        self.manager.policy_create('fjj', ['cv_60_strict_rule',
-                                           'highest_60_rule',
-                                           'redday_60_rule'],
+        self.manager.policy_create('system1-2cv', ['highest_20_rule',
+                                                   'cv_20_strict_rule'],
                                    alert=True)
-        self.manager.policy_create('fjj-nobreak', ['cv_60_strict_rule',
-                                                   'redday_60_rule'])
+
+        self.manager.policy_create('system2-2cv', ['highest_60_rule',
+                                                   'cv_60_strict_rule'],
+                                   alert=True, priority=2)
+
+        self.manager.policy_create('fjj', ['redday_60_rule'])
         self.manager.policy_create('stoploss', ['stop_loss_price_rule'],
                                    alert=True, priority=2)
 

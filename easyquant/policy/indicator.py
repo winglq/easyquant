@@ -1,5 +1,6 @@
 import json
 import os
+import copy
 
 from datetime import datetime
 from easyquant import exceptions
@@ -27,7 +28,7 @@ class Indicator(object):
         raise NotImplementedError()
 
     def get_all_val(self, code):
-        return self.results[code]
+        return copy.deepcopy(self.results[code])
 
     def save(self):
         with open(self.get_save_location(), "w") as f:
