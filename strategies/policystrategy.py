@@ -49,6 +49,8 @@ class Strategy(StrategyTemplate):
                                      'password': CONF.stock_owner_password})
         # query stocks
         r = s.get(CONF.query_stocks_url)
+        if r.status_code == 500:
+            return []
         return json.loads(r.text)
 
     @staticmethod
@@ -121,6 +123,9 @@ class Strategy(StrategyTemplate):
                                       days=60)
         self.manager.indicator_create("yesterday_updown_stock_count_cls",
                                       name='updown')
+        self.manager.indicator_create("today_updown_stock_count_cls",
+                                      name='today_updown')
+
         self.create_stop_loss_price_indicator()
 
     def create_stop_loss_price_indicator(self):
@@ -143,6 +148,9 @@ class Strategy(StrategyTemplate):
                                          1)
         self.manager.get_val_func_create('get_fixed_value_func', 'fix_8',
                                          8)
+        self.manager.get_val_func_create('get_fixed_value_func', 'fix_30',
+                                         30)
+
         self.manager.get_val_func_create('get_value_by_key_func', 'key_now',
                                          'now')
         self.manager.get_val_func_create('get_value_by_key_ignore_zero_func',
@@ -166,6 +174,8 @@ class Strategy(StrategyTemplate):
                                  'redday_60')
         self.manager.rule_create('stop_loss_price_rule', "key_now_ignore_zero",
                                  '<', 'stoploss')
+        self.manager.rule_create('today_updown_stocks_rule', "fix_30",
+                                 '<', 'today_updown')
 
 
     def define_policies(self):
@@ -175,11 +185,13 @@ class Strategy(StrategyTemplate):
         self.manager.policy_create('system2-500cv', ['highest_60_rule',
                                                      'cv_60_rule'])
         self.manager.policy_create('system1-2cv', ['highest_20_rule',
-                                                   'cv_20_strict_rule'],
+                                                   'cv_20_strict_rule',
+                                                   'today_updown_stocks_rule'],
                                    alert=True)
 
         self.manager.policy_create('system2-2cv', ['highest_60_rule',
-                                                   'cv_60_strict_rule'],
+                                                   'cv_60_strict_rule',
+                                                   'today_updown_stocks_rule'],
                                    alert=True, priority=2)
 
         self.manager.policy_create('fjj', ['redday_60_rule'])

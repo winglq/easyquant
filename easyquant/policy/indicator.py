@@ -153,10 +153,10 @@ class YesterdayUpDownStockCount(IndicatorInDays):
     def __init__(self, name):
         super(YesterdayUpDownStockCount, self).__init__(name, 1)
         self.previous_trade_day = etime.previous_trade_date_from_now(1)
-        self.results['total'] = {}
-        self.results['total']['yesterday_nochange'] = 0
-        self.results['total']['yesterday_up'] = 0
-        self.results['total']['yesterday_down'] = 0
+        self.results['market'] = {}
+        self.results['market']['yesterday_nochange'] = 0
+        self.results['market']['yesterday_up'] = 0
+        self.results['market']['yesterday_down'] = 0
 
     def yesterday_change(self, series):
         return series['close'] - series['open']
@@ -164,18 +164,53 @@ class YesterdayUpDownStockCount(IndicatorInDays):
     def cal(self, code, dataframe):
         yesterday = self.previous_trade_day.strftime("%Y-%m-%d")
         if yesterday != dataframe.index[0]:
-            self.results['total']['yesterday_nochange'] += 1
+            self.results['market']['yesterday_nochange'] += 1
             return
 
         yesterday_series = dataframe.loc[dataframe.index[0]]
         change = self.yesterday_change(yesterday_series)
         if change > 0:
-            self.results['total']['yesterday_up'] += 1
+            self.results['market']['yesterday_up'] += 1
         if change < 0:
-            self.results['total']['yesterday_down'] += 1
+            self.results['market']['yesterday_down'] += 1
         if change == 0:
-            self.results['total']['yesterday_nochange'] += 1
+            self.results['market']['yesterday_nochange'] += 1
 
+
+class RealTimeIndicator(Indicator):
+    def __init__(self, name):
+        super(RealTimeIndicator, self).__init__(name)
+
+    def calculate_realtime(self, stocks):
+        raise NotImplementedError()
+
+    def save(self):
+        pass
+
+    def load(self):
+        pass
+
+class TodayUpDownStockCount(RealTimeIndicator):
+    def __init__(self, name):
+        super(TodayUpDownStockCount, self).__init__(name)
+        self.results['market'] = {}
+
+    def calculate_realtime(self, stocks):
+        self.results['market']['upstockcount'] = \
+            len(stocks[stocks['now'] > stocks['open']])
+        self.results['market']['downstockcount'] = \
+            len(stocks[stocks['now'] < stocks['open']])
+        self.results['market']['nochangestockcount'] = \
+            len(stocks[stocks['now'] == stocks['open']])
+
+    def get_compare_val(self, code):
+        return self.results['market']['upstockcount'] / (
+            self.results['market']['upstockcount'] +
+            self.results['market']['downstockcount'] +
+            self.results['market']['nochangestockcount']) * 100
+
+    def get_all_val(self, code):
+        return copy.deepcopy(self.results['market'])
 
 if __name__ == "__main__":
     import tushare as ts

@@ -1,3 +1,5 @@
+import pandas
+
 from easyquant.policy.policy import Policy
 from easyquant import exceptions
 from operator import eq, lt, gt
@@ -6,6 +8,8 @@ from easyquant.policy.indicator import EdgeIndicator
 from easyquant.policy.indicator import StopLossIndicator
 from easyquant.policy.indicator import CVIndicator
 from easyquant.policy.indicator import YesterdayUpDownStockCount
+from easyquant.policy.indicator import RealTimeIndicator
+from easyquant.policy.indicator import TodayUpDownStockCount
 from easyquant.policy.rule import Rule
 
 
@@ -35,9 +39,9 @@ class Manager(object):
             return lambda x: x[key]
 
         def get_value_by_key_ignore_zero_wrapper(key):
-            def get_value_by_key_ignore_zero(hist):
-                if int(hist[key]) != 0:
-                    return hist[key]
+            def get_value_by_key_ignore_zero(stock):
+                if int(stock[key]) != 0:
+                    return stock[key]
                 else:
                     raise exceptions.StockValueZero()
             return get_value_by_key_ignore_zero
@@ -64,7 +68,9 @@ class Manager(object):
                          "stop_loss_price_cls": StopLossIndicator,
                          "cv_cls": CVIndicator,
                          "yesterday_updown_stock_count_cls":
-                         YesterdayUpDownStockCount}
+                         YesterdayUpDownStockCount,
+                         "today_updown_stock_count_cls":
+                         TodayUpDownStockCount}
         for name, indicator in indicator_map.items():
             self.register_indicator_cls(name, indicator)
 
@@ -113,6 +119,7 @@ class Manager(object):
 
     def run(self, stocks):
         result = {}
+        self.prepare_realtime(stocks)
         for policy in self.polices:
             result[policy.name] = policy.filter(stocks)
         return result
@@ -133,6 +140,17 @@ class Manager(object):
                 print(str(e))
             except exceptions.NoHistoryData as e:
                 print(str(e))
+
+    def prepare_realtime(self, stocks):
+        stocks_frame = None
+        for name, indicator in self.indicators.items():
+            if isinstance(indicator, RealTimeIndicator):
+                if stocks_frame is None:
+                    stocks_frame = pandas.DataFrame.from_dict(stocks).T
+                indicator.calculate_realtime(stocks_frame)
+
+    def get_indicator_results(self, indicator, code):
+        return self.indicators[indicator].get_all_val(code)
 
     def save(self):
         for name, indicator in self.indicators.items():

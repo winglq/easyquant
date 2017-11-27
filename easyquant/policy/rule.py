@@ -1,4 +1,7 @@
 from easyquant import exceptions
+from easyquant.policy.indicator import RealTimeIndicator
+
+
 class Rule(object):
     def __init__(self, name, get_val_func, operator, indicator):
         self.name = name
