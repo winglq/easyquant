@@ -184,6 +184,9 @@ class RealTimeIndicator(Indicator):
     def calculate_realtime(self, stocks):
         raise NotImplementedError()
 
+    def cal(self, code, dataframe):
+        pass
+
     def save(self):
         pass
 
