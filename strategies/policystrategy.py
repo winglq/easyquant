@@ -1,6 +1,7 @@
 import tushare as ts
 import requests
 import json
+import time
 from eventlet.greenpool import GreenPool
 from datetime import datetime, timedelta
 from easyquant import StrategyTemplate
@@ -43,12 +44,20 @@ class Strategy(StrategyTemplate):
         self.priority = 1
 
     def get_stocks_for_stop_loss_indicator(self):
-        s = requests.Session()
-        # first login
-        s.post(CONF.login_url, data={'user': CONF.stock_owner_username,
-                                     'password': CONF.stock_owner_password})
+        while True:
+            try:
+                s = requests.Session()
+                # first login
+                s.post(CONF.login_url, data={'user': CONF.stock_owner_username,
+                                             'password':
+                                             CONF.stock_owner_password})
+                r = s.get(CONF.query_stocks_url)
+                break
+            except Exception as e:
+                print("Error %s" % str(e))
+                time.sleep(60)
+
         # query stocks
-        r = s.get(CONF.query_stocks_url)
         if r.status_code == 500:
             return []
         return json.loads(r.text)
@@ -65,6 +74,8 @@ class Strategy(StrategyTemplate):
     def run_before_strategy(self):
         if self.manager.load_indicators():
             return
+        self.create_stop_loss_price_indicator()
+        self.define_user_stocks_rule()
         start_time = datetime.now()
         stock_codes = get_all_stock_codes(True)
         gp = GreenPool()
