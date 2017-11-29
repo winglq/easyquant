@@ -134,6 +134,34 @@ class ContinuousRedDaysIndicator(IndicatorInDays):
                                               self.expected_continuous_days)
 
 
+class LatestTradeDayMa20LessThanMa5Inidcator(IndicatorInDays):
+    def __init__(self, name):
+        super(LatestTradeDayMa20LessThanMa5Inidcator, self).__init__(name, 1)
+
+    def cal(self, code, dataframe):
+        ma20 = dataframe.loc[dataframe.index[0]]['ma20']
+        ma5 = dataframe.loc[dataframe.index[0]]['ma5']
+        if ma20 < ma5:
+            self.results[code] = {'ma20ltma5': True}
+        else:
+            self.results[code] = {'ma20ltma5': False}
+
+    def get_compare_val(self, code):
+        return self.results[code]['ma20ltma5']
+
+
+class LatestTradeDayMa20Inidcator(IndicatorInDays):
+    def __init__(self, name):
+        super(LatestTradeDayMa20Inidcator, self).__init__(name, 1)
+
+    def cal(self, code, dataframe):
+        ma20 = dataframe.loc[dataframe.index[0]]['ma20']
+        self.results[code] = {'ma20': ma20}
+
+    def get_compare_val(self, code):
+        return self.results[code]['ma20']
+
+
 class StopLossIndicator(Indicator):
 
     def __init__(self, name, code_stoplossprice_dict):
@@ -210,7 +238,7 @@ class TodayUpDownStockCount(RealTimeIndicator):
         self.results['market']['upstockcount'] = 0
         self.results['market']['downstockcount'] = 0
         self.results['market']['nochangestockcount'] = 0
-        for code, data in stocks:
+        for code, data in stocks.items():
             if data['now'] > data['open']:
                 self.results['market']['upstockcount'] += 1
             if data['now'] < data['open']:

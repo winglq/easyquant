@@ -10,7 +10,10 @@ from easyquant.policy.indicator import CVIndicator
 from easyquant.policy.indicator import YesterdayUpDownStockCount
 from easyquant.policy.indicator import RealTimeIndicator
 from easyquant.policy.indicator import TodayUpDownStockCount
+from easyquant.policy.indicator import LatestTradeDayMa20Inidcator
+from easyquant.policy.indicator import LatestTradeDayMa20LessThanMa5Inidcator
 from easyquant.policy.rule import Rule
+from easyquant.policy.rule import SelectedCodesRule
 
 
 class Manager(object):
@@ -70,7 +73,12 @@ class Manager(object):
                          "yesterday_updown_stock_count_cls":
                          YesterdayUpDownStockCount,
                          "today_updown_stock_count_cls":
-                         TodayUpDownStockCount}
+                         TodayUpDownStockCount,
+                         "latest_trade_day_ma20_cls":
+                         LatestTradeDayMa20Inidcator,
+                         "latest_trade_day_ma20_less_than_ma5_cls":
+                         LatestTradeDayMa20LessThanMa5Inidcator}
+
         for name, indicator in indicator_map.items():
             self.register_indicator_cls(name, indicator)
 
@@ -108,6 +116,11 @@ class Manager(object):
         rule = Rule(name, self.get_val_funcs[get_val_func],
                     operator_obj, indicator_obj)
         self.register_rules(rule.name, rule)
+
+    def selectedcodesrule_create(self, name, codes):
+        rule = SelectedCodesRule(name, codes)
+        self.register_rules(name, rule)
+
 
     def indicator_create(self, indicator_cls_key, **kwargs):
         cls = self.indicator_classes[indicator_cls_key]
