@@ -141,13 +141,21 @@ class Manager(object):
             except exceptions.NoHistoryData as e:
                 print(str(e))
 
-    def prepare_realtime(self, stocks):
+    def prepare_realtime_dataframe(self, stocks):
         stocks_frame = None
         for name, indicator in self.indicators.items():
             if isinstance(indicator, RealTimeIndicator):
                 if stocks_frame is None:
                     stocks_frame = pandas.DataFrame.from_dict(stocks).T
                 indicator.calculate_realtime(stocks_frame)
+
+    def prepare_realtime_dict(self, stocks):
+        for name, indicator in self.indicators.items():
+            if isinstance(indicator, RealTimeIndicator):
+                indicator.calculate_realtime(stocks)
+
+    def prepare_realtime(self, stocks):
+        self.prepare_realtime_dict(stocks)
 
     def get_indicator_results(self, indicator, code):
         return self.indicators[indicator].get_all_val(code)
