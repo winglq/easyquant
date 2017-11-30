@@ -214,10 +214,16 @@ class Strategy(StrategyTemplate):
 
     def define_policies(self):
 
-        self.manager.policy_create('system1-500cv', ['highest_20_rule',
-                                                     'cv_20_rule'])
-        self.manager.policy_create('system2-500cv', ['highest_60_rule',
-                                                     'cv_60_rule'])
+        self.manager.policy_create('system1-500cv',
+                                   ['highest_20_rule',
+                                    'today_updown_stocks_rule',
+                                    'cv_20_rule'])
+
+        self.manager.policy_create('system2-500cv',
+                                   ['highest_60_rule',
+                                    'today_updown_stocks_rule',
+                                    'cv_60_rule'])
+
         self.manager.policy_create('system1-2cv', ['highest_20_rule',
                                                    'cv_20_strict_rule',
                                                    'ma20ltma5_true_rule',
