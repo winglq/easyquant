@@ -43,3 +43,6 @@ class Policy(object):
     def insert_update_time(self, stock_data):
         break_time = datetime.now().strftime("%Y-%m-%d %H:%M")
         stock_data['update_time'] = break_time
+
+    def reset(self):
+        self.result = {}

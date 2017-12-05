@@ -124,6 +124,10 @@ class Manager(object):
             result[policy.name] = policy.filter(stocks)
         return result
 
+    def reset(self):
+        for policy in self.polices:
+            policy.reset()
+
     def load_indicators(self):
         try:
             for name, indicator in self.indicators.items():

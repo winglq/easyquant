@@ -8,6 +8,7 @@ from easyquant.policy.manager import Manager
 from easyquant.easydealutils.time import previous_trade_date_from_now
 from easyquant.utils.utils import get_all_stock_codes
 from oslo_config import cfg
+from datetime import datetime
 
 opts = [
     cfg.StrOpt("alert_post_url",
@@ -22,8 +23,10 @@ opts = [
                help="login url to get stocks"),
     cfg.StrOpt("query_stocks_url",
                help="query url to get stocks"),
-
-
+    cfg.StrOpt("query_stocks_url",
+               help="query url to get stocks"),
+    cfg.StrOpt("statistics_post_url",
+               help="statistics post url"),
 ]
 
 CONF = cfg.CONF
@@ -40,6 +43,7 @@ class Strategy(StrategyTemplate):
         self.define_policies()
         self.policy_post_url = CONF.policy_post_url
         self.alert_post_url = CONF.alert_post_url
+        self.statistics_post_url = CONF.statistics_post_url
         self.priority = 1
 
     def get_stocks_for_stop_loss_indicator(self):
@@ -65,6 +69,7 @@ class Strategy(StrategyTemplate):
     def run_before_strategy(self):
         if self.manager.load_indicators():
             return
+        self.manager.reset()
         start_time = datetime.now()
         stock_codes = get_all_stock_codes(True)
         gp = GreenPool()
@@ -198,6 +203,17 @@ class Strategy(StrategyTemplate):
         self.manager.policy_create('stoploss', ['stop_loss_price_rule'],
                                    alert=True, priority=2)
 
+    def push_statistics(self):
+        try:
+            result = self.manager.get_indicator_results("today_updown",
+                                                        'market')
+            send_data={'update_time': datetime.now().strftime("%m-%d %H:%M")}
+            send_data["today_updown"] = result
+            requests.post(self.statistics_post_url,
+                          json=send_data)
+        except Exception:
+            self.log.info("push statistics error")
+
     def clock(self, event):
         if event.data.clock_event == 'open':
             # 开市了
@@ -208,6 +224,9 @@ class Strategy(StrategyTemplate):
         elif event.data.clock_event == 5:
             # 5 分钟的 clock
             self.log.info("5分钟")
+            self.push_statistics()
+        elif event.data.clock_event == 30:
+            self.log.info("30分钟")
         elif event.data.clock_event == 'newday':
             self.log.info("%s newday" % self.name)
             self.reload()
