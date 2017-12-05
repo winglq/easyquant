@@ -134,6 +134,34 @@ class ContinuousRedDaysIndicator(IndicatorInDays):
                                               self.expected_continuous_days)
 
 
+class LatestTradeDayMa20LessThanMa5Inidcator(IndicatorInDays):
+    def __init__(self, name):
+        super(LatestTradeDayMa20LessThanMa5Inidcator, self).__init__(name, 1)
+
+    def cal(self, code, dataframe):
+        ma20 = dataframe.loc[dataframe.index[0]]['ma20']
+        ma5 = dataframe.loc[dataframe.index[0]]['ma5']
+        if ma20 < ma5:
+            self.results[code] = {'ma20ltma5': True}
+        else:
+            self.results[code] = {'ma20ltma5': False}
+
+    def get_compare_val(self, code):
+        return self.results[code]['ma20ltma5']
+
+
+class LatestTradeDayMa20Inidcator(IndicatorInDays):
+    def __init__(self, name):
+        super(LatestTradeDayMa20Inidcator, self).__init__(name, 1)
+
+    def cal(self, code, dataframe):
+        ma20 = dataframe.loc[dataframe.index[0]]['ma20']
+        self.results[code] = {'ma20': ma20}
+
+    def get_compare_val(self, code):
+        return self.results[code]['ma20']
+
+
 class StopLossIndicator(Indicator):
 
     def __init__(self, name, code_stoplossprice_dict):
@@ -184,6 +212,9 @@ class RealTimeIndicator(Indicator):
     def calculate_realtime(self, stocks):
         raise NotImplementedError()
 
+    def cal(self, code, dataframe):
+        pass
+
     def save(self):
         pass
 
@@ -195,13 +226,28 @@ class TodayUpDownStockCount(RealTimeIndicator):
         super(TodayUpDownStockCount, self).__init__(name)
         self.results['market'] = {}
 
-    def calculate_realtime(self, stocks):
+    def calculate_realtime_by_dataframe(self, stocks):
         self.results['market']['upstockcount'] = \
             len(stocks[stocks['now'] > stocks['open']])
         self.results['market']['downstockcount'] = \
             len(stocks[stocks['now'] < stocks['open']])
         self.results['market']['nochangestockcount'] = \
             len(stocks[stocks['now'] == stocks['open']])
+
+    def calculate_realtime_by_dict(self, stocks):
+        self.results['market']['upstockcount'] = 0
+        self.results['market']['downstockcount'] = 0
+        self.results['market']['nochangestockcount'] = 0
+        for code, data in stocks.items():
+            if data['now'] > data['open']:
+                self.results['market']['upstockcount'] += 1
+            if data['now'] < data['open']:
+                self.results['market']['downstockcount'] += 1
+            if data['now'] == data['open']:
+                self.results['market']['nochangestockcount'] += 1
+
+    def calculate_realtime(self, stocks):
+        self.calculate_realtime_by_dict(stocks)
 
     def get_compare_val(self, code):
         return self.results['market']['upstockcount'] / (

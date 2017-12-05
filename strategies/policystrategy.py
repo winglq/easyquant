@@ -1,6 +1,7 @@
 import tushare as ts
 import requests
 import json
+import time
 from eventlet.greenpool import GreenPool
 from datetime import datetime, timedelta
 from easyquant import StrategyTemplate
@@ -47,12 +48,20 @@ class Strategy(StrategyTemplate):
         self.priority = 1
 
     def get_stocks_for_stop_loss_indicator(self):
-        s = requests.Session()
-        # first login
-        s.post(CONF.login_url, data={'user': CONF.stock_owner_username,
-                                     'password': CONF.stock_owner_password})
+        while True:
+            try:
+                s = requests.Session()
+                # first login
+                s.post(CONF.login_url, data={'user': CONF.stock_owner_username,
+                                             'password':
+                                             CONF.stock_owner_password})
+                r = s.get(CONF.query_stocks_url)
+                break
+            except Exception as e:
+                print("Error %s" % str(e))
+                time.sleep(60)
+
         # query stocks
-        r = s.get(CONF.query_stocks_url)
         if r.status_code == 500:
             return []
         return json.loads(r.text)
@@ -70,6 +79,8 @@ class Strategy(StrategyTemplate):
         if self.manager.load_indicators():
             return
         self.manager.reset()
+        self.create_stop_loss_price_indicator()
+        self.define_user_stocks_rule()
         start_time = datetime.now()
         stock_codes = get_all_stock_codes(True)
         gp = GreenPool()
@@ -95,7 +106,8 @@ class Strategy(StrategyTemplate):
                 for key in data['updated']:
                     data['result'][key]['code'] = key
                     alert_contents.append(data['result'][key])
-                action = "sell" if policy == "stoploss" else "buy"
+                action = "sell" if policy in \
+                    ["stoploss", "sell_when_ma20btnow" ] else "buy"
                 send_data = {'type': 'stock',
                              'priority':
                              self.manager.get_policy(policy).priority,
@@ -132,6 +144,12 @@ class Strategy(StrategyTemplate):
                                       name='today_updown')
 
         self.create_stop_loss_price_indicator()
+        self.manager.indicator_create(
+            "latest_trade_day_ma20_less_than_ma5_cls",
+            name='ma20ltma5')
+        self.manager.indicator_create(
+            "latest_trade_day_ma20_cls",
+            name='ma20')
 
     def create_stop_loss_price_indicator(self):
         stocks = self.get_stocks_for_stop_loss_indicator()
@@ -155,12 +173,20 @@ class Strategy(StrategyTemplate):
                                          8)
         self.manager.get_val_func_create('get_fixed_value_func', 'fix_30',
                                          30)
-
+        self.manager.get_val_func_create('get_fixed_value_func', 'fix_True',
+                                         True)
+        self.manager.get_val_func_create('get_fixed_value_func', 'fix_False',
+                                         False)
         self.manager.get_val_func_create('get_value_by_key_func', 'key_now',
                                          'now')
         self.manager.get_val_func_create('get_value_by_key_ignore_zero_func',
                                          'key_now_ignore_zero',
                                          'now')
+
+    def define_user_stocks_rule(self):
+        stocks = self.get_stocks_for_stop_loss_indicator()
+        codes = [s["code"] for s in stocks]
+        self.manager.selectedcodesrule_create('user_stocks_rule', codes)
 
     def define_rules(self):
         self.manager.rule_create('highest_20_rule', "key_now", '>',
@@ -181,26 +207,46 @@ class Strategy(StrategyTemplate):
                                  '<', 'stoploss')
         self.manager.rule_create('today_updown_stocks_rule', "fix_30",
                                  '<', 'today_updown')
+        self.manager.rule_create('ma20ltma5_true_rule',
+                                 'fix_True', '=', 'ma20ltma5')
+        self.manager.rule_create('ma20ltma5_false_rule',
+                                 'fix_False', '=', 'ma20ltma5')
+        self.manager.rule_create('now_lt_ma20_rule',
+                                 'key_now', '<', 'ma20')
+
+        self.define_user_stocks_rule()
 
 
     def define_policies(self):
 
-        self.manager.policy_create('system1-500cv', ['highest_20_rule',
-                                                     'cv_20_rule'])
-        self.manager.policy_create('system2-500cv', ['highest_60_rule',
-                                                     'cv_60_rule'])
+        self.manager.policy_create('system1-500cv',
+                                   ['highest_20_rule',
+                                    'today_updown_stocks_rule',
+                                    'cv_20_rule'])
+
+        self.manager.policy_create('system2-500cv',
+                                   ['highest_60_rule',
+                                    'today_updown_stocks_rule',
+                                    'cv_60_rule'])
+
         self.manager.policy_create('system1-2cv', ['highest_20_rule',
                                                    'cv_20_strict_rule',
+                                                   'ma20ltma5_true_rule',
                                                    'today_updown_stocks_rule'],
                                    alert=True)
 
         self.manager.policy_create('system2-2cv', ['highest_60_rule',
                                                    'cv_60_strict_rule',
+                                                   'ma20ltma5_true_rule',
                                                    'today_updown_stocks_rule'],
                                    alert=True, priority=2)
 
         self.manager.policy_create('fjj', ['redday_60_rule'])
         self.manager.policy_create('stoploss', ['stop_loss_price_rule'],
+                                   alert=True, priority=2)
+        self.manager.policy_create('sell_when_ma20btnow',
+                                   ['user_stocks_rule',
+                                    'now_lt_ma20_rule'],
                                    alert=True, priority=2)
 
     def push_statistics(self):

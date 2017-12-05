@@ -28,6 +28,19 @@ class Rule(object):
         return result
 
 
+class SelectedCodesRule(Rule):
+    def __init__(self, name, codes):
+        super(SelectedCodesRule, self).__init__(name, None, None, None)
+        self.codes = codes
+
+    def filter(self, stocks):
+        result = {}
+        for code, data in stocks.items():
+            if code in self.codes:
+                result[code] = data
+        return result
+
+
 if __name__ == "__main__":
     from easyquant.policy.indicator import ContinuousRedDaysIndicator
     from easyquant.policy.indicator import EdgeIndicator
