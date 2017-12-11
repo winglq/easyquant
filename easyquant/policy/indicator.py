@@ -33,12 +33,16 @@ class Indicator(object):
     def save(self):
         with open(self.get_save_location(), "w") as f:
             json.dump(self.results, f, indent=2)
+        print("Indicator %s saved successfully" %
+              self.name)
 
     def load(self):
         print("Indicator %s loading %s" %
               (self.name, self.get_save_location()))
         with open(self.get_save_location()) as f:
             self.results = json.load(f)
+        print("Indicator %s loaded successfully" %
+              self.name)
 
     def get_save_location(self):
         fmt_time = datetime.now().strftime("%y%m%d")

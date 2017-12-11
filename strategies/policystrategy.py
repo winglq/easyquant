@@ -58,7 +58,7 @@ class Strategy(StrategyTemplate):
                 r = s.get(CONF.query_stocks_url)
                 break
             except Exception as e:
-                print("Error %s" % str(e))
+                print("Error: %s" % str(e))
                 time.sleep(60)
 
         # query stocks
@@ -77,6 +77,7 @@ class Strategy(StrategyTemplate):
 
     def run_before_strategy(self):
         if self.manager.load_indicators():
+            self.log.info("All indicators loaded successfully")
             return
         self.manager.reset()
         self.create_stop_loss_price_indicator()

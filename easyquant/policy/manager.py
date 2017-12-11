@@ -140,6 +140,11 @@ class Manager(object):
     def reset(self):
         for policy in self.polices:
             policy.reset()
+        print("All policy resetted")
+
+    def dump(self):
+        print("All polices: %s\nAll rules: %s\nAll indicators: %s\n" %
+              (self.policy_list(), self.rule_list(), self.indicator_list()))
 
     def load_indicators(self):
         try:
@@ -181,6 +186,14 @@ class Manager(object):
         for name, indicator in self.indicators.items():
             indicator.save()
 
+    def indicator_list(self):
+        return [x for x in self.indicators.keys()]
+
+    def rule_list(self):
+        return [x for x in self.rules.keys()]
+
+    def policy_list(self):
+        return [x.name for x in self.polices]
 
 if __name__ == "__main__":
     import tushare as ts
