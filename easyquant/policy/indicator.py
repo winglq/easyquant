@@ -138,6 +138,35 @@ class ContinuousRedDaysIndicator(IndicatorInDays):
                                               self.expected_continuous_days)
 
 
+class ContinuousBigRedDaysIndicator(ContinuousRedDaysIndicator):
+    def __init__(self, name, expected_continuous_days,
+                 uppercentage=0.5, days=60):
+        super(ContinuousBigRedDaysIndicator, self).__init__(
+            name, expected_continuous_days, days)
+        self.uppercentage = uppercentage
+
+    def is_big_red_day(self, series):
+        return series['p_change'] >= self.uppercentage
+
+    def cal(self, code, dataframe):
+        continuous_reddays = 0
+        big_reddays = 0
+        count = 0
+        for index, row in dataframe.iterrows():
+            if self.is_red_day(row):
+                continuous_reddays += 1
+                if self.is_big_red_day(row):
+                    big_reddays += 1
+                if big_reddays >= self.expected_continuous_days:
+                    count += 1
+                    continuous_reddays = 0
+                    big_reddays = 0
+            else:
+                continuous_reddays = 0
+                big_reddays = 0
+        self.results[code] = {'continuous_reddays_count': count}
+
+
 class LatestTradeDayMa20LessThanMa5Inidcator(IndicatorInDays):
     def __init__(self, name):
         super(LatestTradeDayMa20LessThanMa5Inidcator, self).__init__(name, 1)
@@ -273,4 +302,8 @@ if __name__ == "__main__":
     cindicator.calculate('002597', hist)
     print(cindicator.get_all_val("002597"))
     yindicator.calculate('002597', hist)
-    print(yindicator.get_all_val('total'))
+    print(yindicator.get_all_val('market'))
+    hist = ts.get_hist_data("000868", start="2017-08-10", end="2017-11-17")
+    bcindicator = ContinuousBigRedDaysIndicator('breddays', 4, 0.5, 60)
+    bcindicator.calculate('000868', hist)
+    print(bcindicator.get_all_val('000868'))

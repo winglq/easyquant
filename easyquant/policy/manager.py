@@ -4,6 +4,7 @@ from easyquant.policy.policy import Policy
 from easyquant import exceptions
 from operator import eq, lt, gt
 from easyquant.policy.indicator import ContinuousRedDaysIndicator
+from easyquant.policy.indicator import ContinuousBigRedDaysIndicator
 from easyquant.policy.indicator import EdgeIndicator
 from easyquant.policy.indicator import StopLossIndicator
 from easyquant.policy.indicator import CVIndicator
@@ -77,7 +78,9 @@ class Manager(object):
                          "latest_trade_day_ma20_cls":
                          LatestTradeDayMa20Inidcator,
                          "latest_trade_day_ma20_less_than_ma5_cls":
-                         LatestTradeDayMa20LessThanMa5Inidcator}
+                         LatestTradeDayMa20LessThanMa5Inidcator,
+                         "continuous_big_red_days_cls":
+                         ContinuousBigRedDaysIndicator}
 
         for name, indicator in indicator_map.items():
             self.register_indicator_cls(name, indicator)

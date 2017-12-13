@@ -128,6 +128,8 @@ class Strategy(StrategyTemplate):
     def define_indicators(self):
         self.manager.indicator_create('edge_cls', name='highest_20',
                                       column='high', days=20)
+        self.manager.indicator_create('edge_cls', name='highest_30',
+                                      column='high', days=30)
         self.manager.indicator_create('edge_cls', name='highest_60',
                                       column='high', days=60)
         self.manager.indicator_create('cv_cls', name='cv_20', column='close',
@@ -143,6 +145,9 @@ class Strategy(StrategyTemplate):
                                       name='updown')
         self.manager.indicator_create("today_updown_stock_count_cls",
                                       name='today_updown')
+        self.manager.indicator_create("continuous_big_red_days_cls",
+                                      expected_continuous_days=4,
+                                      name='big_redday_60')
 
         self.create_stop_loss_price_indicator()
         self.manager.indicator_create(
@@ -172,6 +177,8 @@ class Strategy(StrategyTemplate):
                                          1)
         self.manager.get_val_func_create('get_fixed_value_func', 'fix_8',
                                          8)
+        self.manager.get_val_func_create('get_fixed_value_func', 'fix_10',
+                                         10)
         self.manager.get_val_func_create('get_fixed_value_func', 'fix_30',
                                          30)
         self.manager.get_val_func_create('get_fixed_value_func', 'fix_True',
@@ -194,6 +201,8 @@ class Strategy(StrategyTemplate):
                                  'highest_20')
         self.manager.rule_create('highest_60_rule', "key_now", '>',
                                  'highest_60')
+        self.manager.rule_create('highest_30_rule', "key_now", '>',
+                                 'highest_30')
         self.manager.rule_create('cv_20_rule', "fix_500", '>',
                                  'cv_20')
         self.manager.rule_create('cv_20_strict_rule', "fix_2", '>',
@@ -202,8 +211,13 @@ class Strategy(StrategyTemplate):
                                  'cv_60')
         self.manager.rule_create('cv_60_strict_rule', "fix_2", '>',
                                  'cv_60')
+        self.manager.rule_create('cv_60_lt_10_rule', "fix_10", '>',
+                                 'cv_60')
         self.manager.rule_create('redday_60_rule', "fix_1", '<',
                                  'redday_60')
+        self.manager.rule_create('big_redday_60_rule', "fix_1", '<',
+                                 'big_redday_60')
+
         self.manager.rule_create('stop_loss_price_rule', "key_now_ignore_zero",
                                  '<', 'stoploss')
         self.manager.rule_create('today_updown_stocks_rule', "fix_30",
@@ -249,6 +263,14 @@ class Strategy(StrategyTemplate):
                                    ['user_stocks_rule',
                                     'now_lt_ma20_rule'],
                                    alert=True, priority=2)
+
+        self.manager.policy_create('bigreddays-10cv-30break',
+                                   ['highest_30_rule',
+                                    'cv_60_lt_10_rule',
+                                    'big_redday_60_rule',
+                                    'ma20ltma5_true_rule',
+                                    'today_updown_stocks_rule'],
+                                   alert=True, priority=1)
 
     def push_statistics(self):
         try:
