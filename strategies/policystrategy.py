@@ -245,12 +245,14 @@ class Strategy(StrategyTemplate):
                                     'cv_60_rule'])
 
         self.manager.policy_create('system1-2cv', ['highest_20_rule',
+                                                   'redday_60_rule',
                                                    'cv_20_strict_rule',
                                                    'ma20ltma5_true_rule',
                                                    'today_updown_stocks_rule'],
                                    alert=True)
 
         self.manager.policy_create('system2-2cv', ['highest_60_rule',
+                                                   'redday_60_rule',
                                                    'cv_60_strict_rule',
                                                    'ma20ltma5_true_rule',
                                                    'today_updown_stocks_rule'],
