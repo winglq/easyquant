@@ -1,5 +1,8 @@
+import copy
+import json
 from easyquant import exceptions
 from easyquant.policy.indicator import RealTimeIndicator
+from playground.top_5_profit_ratio import get_top_5_profit_ratio_stocks
 
 
 class Rule(object):
@@ -37,6 +40,32 @@ class SelectedCodesRule(Rule):
         result = {}
         for code, data in stocks.items():
             if code in self.codes:
+                result[code] = data
+        return result
+
+class TopProfitRatioRule(Rule):
+    def __init__(self, name):
+        super(TopProfitRatioRule, self).__init__(name, None, None, None)
+        self.top_5_stocks = get_top_5_profit_ratio_stocks()
+
+    def filter(self, stocks):
+        result = {}
+        top_5_codes = [x['code'] for x in self.top_5_stocks]
+        for code, data in stocks.items():
+            if code in top_5_codes:
+                for x in self.top_5_stocks:
+                    if code == x['code']:
+                        rule_result = copy.deepcopy(x)
+                        rule_result.pop('code')
+                        rule_result.pop('price')
+                        rdata = json.loads(rule_result.pop('data'))
+                        rule_result['report_date'] = \
+                            list(rdata['report_date'].values())
+                        rule_result['shares'] = \
+                            list(rdata['shares'].values())
+                        rule_result['divi'] = \
+                            list(rdata['divi'].values())
+                        data['rule_results'] = rule_result
                 result[code] = data
         return result
 

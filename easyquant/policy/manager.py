@@ -15,6 +15,7 @@ from easyquant.policy.indicator import LatestTradeDayMa20Inidcator
 from easyquant.policy.indicator import LatestTradeDayMa20LessThanMa5Inidcator
 from easyquant.policy.rule import Rule
 from easyquant.policy.rule import SelectedCodesRule
+from easyquant.policy.rule import TopProfitRatioRule
 
 
 class Manager(object):
@@ -124,6 +125,9 @@ class Manager(object):
         rule = SelectedCodesRule(name, codes)
         self.register_rules(name, rule)
 
+    def topprofitstockrule_create(self, name):
+        rule = TopProfitRatioRule(name)
+        self.register_rules(name, rule)
 
     def indicator_create(self, indicator_cls_key, **kwargs):
         cls = self.indicator_classes[indicator_cls_key]

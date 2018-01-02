@@ -230,6 +230,7 @@ class Strategy(StrategyTemplate):
                                  'key_now', '<', 'ma20')
 
         self.define_user_stocks_rule()
+        self.manager.topprofitstockrule_create('top_profit_ratio_rule')
 
 
     def define_policies(self):
@@ -273,6 +274,8 @@ class Strategy(StrategyTemplate):
                                     'ma20ltma5_true_rule',
                                     'today_updown_stocks_rule'],
                                    alert=True, priority=1)
+        self.manager.policy_create('topprofit',
+                                   ['top_profit_ratio_rule'])
 
     def push_statistics(self):
         try:
