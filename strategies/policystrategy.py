@@ -278,13 +278,11 @@ class Strategy(StrategyTemplate):
                                     'cv_60_lt_10_rule',
                                     'big_redday_60_rule',
                                     'ma20ltma5_true_rule',
+                                    'volume_bt_4Xvmean_rule',
                                     'today_updown_stocks_rule'],
-                                   priority=1)
+                                   priority=1, alert=True)
         self.manager.policy_create('topprofit',
                                    ['top_profit_ratio_rule'])
-        self.manager.policy_create('volume_bt_4Xmeanvolume',
-                                   ['volume_bt_4Xvmean_rule'],
-                                   alert=True, priority=1)
 
     def push_statistics(self):
         try:
