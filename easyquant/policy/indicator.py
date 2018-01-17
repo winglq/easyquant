@@ -109,6 +109,18 @@ class EdgeIndicator(IndicatorInDays):
         return self.results[code][self.compare_key]
 
 
+class VolumeMeanIndicator(IndicatorInDays):
+
+    def __init__(self, name, days=60):
+        super(VolumeMeanIndicator, self).__init__(name, days)
+
+    def cal(self, code, dataframe):
+        mean = dataframe[0: self.days]['volume'].mean() * 100
+        self.results[code] = {"4X_volume_mean": 4 * mean}
+    def get_compare_val(self, code):
+        return self.results[code]["4X_volume_mean"]
+
+
 class ContinuousRedDaysIndicator(IndicatorInDays):
     def __init__(self, name, expected_continuous_days, days=60):
         super(ContinuousRedDaysIndicator, self).__init__(name, days)
@@ -293,7 +305,7 @@ class TodayUpDownStockCount(RealTimeIndicator):
 
 if __name__ == "__main__":
     import tushare as ts
-    hist = ts.get_hist_data("002597", start="2017-09-10", end="2017-11-17")
+    hist = ts.get_hist_data("002597", start="2017-09-10", end="2017-12-17")
     hindicator = EdgeIndicator('edge', 'close', 30)
     yindicator = YesterdayUpDownStockCount('yesterday')
     hindicator.calculate("002597", hist)
@@ -307,3 +319,6 @@ if __name__ == "__main__":
     bcindicator = ContinuousBigRedDaysIndicator('breddays', 4, 0.5, 60)
     bcindicator.calculate('000886', hist)
     print(bcindicator.get_all_val('000886'))
+    vmean = VolumeMeanIndicator('vmean')
+    vmean.calculate('002597', hist)
+    print(vmean.get_all_val("002597"))

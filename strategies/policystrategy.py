@@ -148,6 +148,8 @@ class Strategy(StrategyTemplate):
         self.manager.indicator_create("continuous_big_red_days_cls",
                                       expected_continuous_days=4,
                                       name='big_redday_60')
+        self.manager.indicator_create("volume_mean_cls",
+                                      name='volume_mean')
 
         self.create_stop_loss_price_indicator()
         self.manager.indicator_create(
@@ -187,6 +189,8 @@ class Strategy(StrategyTemplate):
                                          False)
         self.manager.get_val_func_create('get_value_by_key_func', 'key_now',
                                          'now')
+        self.manager.get_val_func_create('get_value_by_key_func',
+                                         'key_turnover', 'turnover')
         self.manager.get_val_func_create('get_value_by_key_ignore_zero_func',
                                          'key_now_ignore_zero',
                                          'now')
@@ -228,6 +232,8 @@ class Strategy(StrategyTemplate):
                                  'fix_False', '=', 'ma20ltma5')
         self.manager.rule_create('now_lt_ma20_rule',
                                  'key_now', '<', 'ma20')
+        self.manager.rule_create('volume_bt_4Xvmean_rule',
+                                 'key_turnover', '>', 'volume_mean')
 
         self.define_user_stocks_rule()
         self.manager.topprofitstockrule_create('top_profit_ratio_rule')
@@ -273,9 +279,12 @@ class Strategy(StrategyTemplate):
                                     'big_redday_60_rule',
                                     'ma20ltma5_true_rule',
                                     'today_updown_stocks_rule'],
-                                   alert=True, priority=1)
+                                   priority=1)
         self.manager.policy_create('topprofit',
                                    ['top_profit_ratio_rule'])
+        self.manager.policy_create('volume_bt_4Xmeanvolume',
+                                   ['volume_bt_4Xvmean_rule'],
+                                   alert=True, priority=1)
 
     def push_statistics(self):
         try:

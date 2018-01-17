@@ -13,6 +13,7 @@ from easyquant.policy.indicator import RealTimeIndicator
 from easyquant.policy.indicator import TodayUpDownStockCount
 from easyquant.policy.indicator import LatestTradeDayMa20Inidcator
 from easyquant.policy.indicator import LatestTradeDayMa20LessThanMa5Inidcator
+from easyquant.policy.indicator import VolumeMeanIndicator
 from easyquant.policy.rule import Rule
 from easyquant.policy.rule import SelectedCodesRule
 from easyquant.policy.rule import TopProfitRatioRule
@@ -60,7 +61,8 @@ class Manager(object):
     def init_internal_operators(self):
         oper_maps = {'>': gt,
                      '<': lt,
-                     '=': eq}
+                     '=': eq,
+                     'in': 'in'}
         for name, op in oper_maps.items():
             self.register_operators(name, op)
 
@@ -81,7 +83,9 @@ class Manager(object):
                          "latest_trade_day_ma20_less_than_ma5_cls":
                          LatestTradeDayMa20LessThanMa5Inidcator,
                          "continuous_big_red_days_cls":
-                         ContinuousBigRedDaysIndicator}
+                         ContinuousBigRedDaysIndicator,
+                         "volume_mean_cls":
+                         VolumeMeanIndicator,}
 
         for name, indicator in indicator_map.items():
             self.register_indicator_cls(name, indicator)
